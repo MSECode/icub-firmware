@@ -450,7 +450,7 @@ BOOL Joint_check_faults(Joint* o)
         {   
             static eOerrmanDescriptor_t descriptor = {0};
             descriptor.par16 = o->ID;
-            descriptor.par64 = 0;
+            descriptor.par64 = ((uint64_t)o->pos_fbk << 32) | ((uint64_t)o->pos_fbk_from_motors);
             descriptor.sourcedevice = eo_errman_sourcedevice_localboard;
             descriptor.sourceaddress = 0;
             descriptor.code = eoerror_code_get(eoerror_category_MotionControl, eoerror_value_MC_joint_hard_limit);
