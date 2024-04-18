@@ -147,8 +147,8 @@ void Joint_init(Joint* o)
     o->ZTau = 560.0f*1.2f; // PWM/mNm * mNm;
     o->Ke = 0.05f;
 #endif
-    o->abs_enc_pos_last = ZERO;
-    o->abs_enc_pos_sure = ZERO;
+    o->abs_enc_pos_last = 0xfefa;
+    o->abs_enc_pos_sure = 0xabcd;
 
     Joint_reset_calibration_data(o);
 }
