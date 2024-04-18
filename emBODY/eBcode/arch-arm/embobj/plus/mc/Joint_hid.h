@@ -97,6 +97,9 @@ struct Joint_hid // Joint
     CTRL_UNITS ZTau;
     CTRL_UNITS Ke;
 #endif 
+        
+     uint16_t abs_enc_pos_last;
+     uint16_t abs_enc_pos_sure;
 };
 
  

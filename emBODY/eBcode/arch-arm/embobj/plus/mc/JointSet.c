@@ -203,6 +203,8 @@ void JointSet_do_odometry(JointSet* o) //
             else
             {
                 o->joint[j].pos_fbk = AbsEncoder_position(o->absEncoder+j);
+                o->joint[j].abs_enc_pos_last = AbsEncoder_dbg_get_position_last(o->absEncoder+j);
+                o->joint[j].abs_enc_pos_sure = AbsEncoder_dbg_get_position_sure(o->absEncoder+j);
                 
                 if (o->USE_SPEED_FBK_FROM_MOTORS)
                 {

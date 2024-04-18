@@ -480,6 +480,16 @@ void AbsEncoder_still_check_reset(AbsEncoder* o)
     o->partial_space = 0;
 }
 
+uint16_t AbsEncoder_dbg_get_position_last(AbsEncoder* o)
+{
+    return o->position_last;
+}
+
+uint16_t AbsEncoder_dbg_get_position_sure(AbsEncoder* o)
+{
+    return o->position_sure;
+}
+
 
 void AbsEncoder_update(AbsEncoder* o, uint16_t position)
 {

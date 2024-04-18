@@ -31,6 +31,7 @@
 #include "EOtheErrorManager.h"
 #include "EoError.h"
 #include "EOtheEntities.h"
+#include "AbsEncoder.h"
     
 #if defined(STM32HAL_BOARD_AMC) && defined(DEBUG_AEA3_stream_over_TORQUE)
 #include "embot_app_eth_theEncoderReader.h"
@@ -146,6 +147,8 @@ void Joint_init(Joint* o)
     o->ZTau = 560.0f*1.2f; // PWM/mNm * mNm;
     o->Ke = 0.05f;
 #endif
+    o->abs_enc_pos_last = ZERO;
+    o->abs_enc_pos_sure = ZERO;
 
     Joint_reset_calibration_data(o);
 }
@@ -450,7 +453,7 @@ BOOL Joint_check_faults(Joint* o)
         {   
             static eOerrmanDescriptor_t descriptor = {0};
             descriptor.par16 = o->ID;
-            descriptor.par64 = ((uint64_t)o->pos_fbk << 32) | ((uint64_t)o->pos_fbk_from_motors);
+            descriptor.par64 = ((uint64_t)o->pos_fbk << 32) | ((uint64_t)o->abs_enc_pos_last << 16) | ((uint64_t)o->abs_enc_pos_sure);
             descriptor.sourcedevice = eo_errman_sourcedevice_localboard;
             descriptor.sourceaddress = 0;
             descriptor.code = eoerror_code_get(eoerror_category_MotionControl, eoerror_value_MC_joint_hard_limit);

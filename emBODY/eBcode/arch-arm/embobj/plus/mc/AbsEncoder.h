@@ -168,6 +168,8 @@ extern void AbsEncoder_calibrate_in_hard_stop(AbsEncoder* o);
 
 extern BOOL AbsEncoder_is_initialized(AbsEncoder* o);
 
+extern uint16_t AbsEncoder_dbg_get_position_last(AbsEncoder* o);
+extern uint16_t AbsEncoder_dbg_get_position_sure(AbsEncoder* o);
  
 #endif  // include-guard
 
