@@ -93,6 +93,8 @@ extern eOresult_t eo_appEncReader_UpdatedMaisConversionFactors(EOappEncReader *p
 extern eOresult_t eo_appEncReader_UpdatedHallAdcConversionFactors(EOappEncReader *p, uint8_t jomo, float convFactor);
 extern eOresult_t eo_appEncReader_UpdatedHallAdcOffset(EOappEncReader *p, uint8_t jomo, int32_t offset);
 
+extern eOresult_t eo_appEncReader_GetRawValue(EOappEncReader *p, uint8_t jomo, eOencoderreader_RawValue_t *rv1, eOencoderreader_RawValue_t *rv2, eOencoderreader_RawValue_t *rv3);
+
 /** @}            
     end of group eo_app_encodersReader
  **/

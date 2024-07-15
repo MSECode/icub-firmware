@@ -106,6 +106,12 @@ typedef enum
     eo_encreader_pos_any = 14,
     eo_encreader_pos_none = 15   
 } eOencoderreader_Position_t;    
+
+typedef struct
+{
+    int32_t val;
+    int32_t diagnInfo;
+} eOencoderreader_RawValue_t;
    
 // - declaration of extern public variables, ...deprecated: better using use _get/_set instead ------------------------
 // empty-section
@@ -143,6 +149,7 @@ extern eOmc_encoder_t eo_encoderreader_GetType(EOtheEncoderReader* p, uint8_t jo
 
 extern eOresult_t eo_encoderreader_Scale(EOtheEncoderReader* p, uint8_t jomo, eOencoderreader_Position_t position, eOencoderreader_Scaler *scaler);
 
+extern eOresult_t eo_encoderreader_GetRaw(EOtheEncoderReader *p, uint8_t jomo, eOencoderreader_RawValue_t *rv1, eOencoderreader_RawValue_t *rv2, eOencoderreader_RawValue_t *rv3);
 
 /** @}            
     end of group eo_EOtheEncoderReader

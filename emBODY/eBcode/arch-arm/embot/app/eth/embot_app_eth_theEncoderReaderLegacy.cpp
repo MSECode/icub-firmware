@@ -45,7 +45,8 @@ struct embot::app::eth::theEncoderReader::Impl
     
     // advanced
     bool read(const embot::app::eth::encoder::experimental::Target &target, embot::app::eth::encoder::experimental::Value &value);
-
+    
+    bool GetRaw(uint8_t jomo, embot::app::eth::encoder::experimental::RawValue &value1, embot::app::eth::encoder::experimental::RawValue &value2, embot::app::eth::encoder::experimental::RawValue &value3);
 };
 
 
@@ -119,6 +120,15 @@ bool embot::app::eth::theEncoderReader::Impl::read(const embot::app::eth::encode
     value.error = embot::app::eth::encoder::experimental::Error::NONE;
     
     return true;
+}
+
+bool embot::app::eth::theEncoderReader::Impl::GetRaw(uint8_t jomo, embot::app::eth::encoder::experimental::RawValue &value1, embot::app::eth::encoder::experimental::RawValue &value2, embot::app::eth::encoder::experimental::RawValue &value3)
+{
+    eOencoderreader_RawValue_t *rv1 = reinterpret_cast<eOencoderreader_RawValue_t*>(&value1);
+    eOencoderreader_RawValue_t *rv2 = reinterpret_cast<eOencoderreader_RawValue_t*>(&value2);
+    eOencoderreader_RawValue_t *rv3 = reinterpret_cast<eOencoderreader_RawValue_t*>(&value3);
+    
+    return eores_OK == eo_encoderreader_GetRaw(eo_encoderreader_GetHandle(), jomo, rv1, rv2, rv3);
 }
 
 
@@ -200,6 +210,10 @@ bool embot::app::eth::theEncoderReader::read(const embot::app::eth::encoder::exp
     return pImpl->read(target, value);
 }
 
+bool embot::app::eth::theEncoderReader::GetRaw(uint8_t jomo, embot::app::eth::encoder::experimental::RawValue &value1, embot::app::eth::encoder::experimental::RawValue &value2, embot::app::eth::encoder::experimental::RawValue &value3)
+{
+    return pImpl->GetRaw(jomo, value1, value2, value3);
+}
 
 // - end-of-file (leave a blank line after)----------------------------------------------------------------------------
 

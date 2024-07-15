@@ -216,9 +216,15 @@ namespace embot::app::eth::encoder::experimental {
     constexpr size_t maxPOSITIONs {4};
     
     struct RawValue
-    {   // the value w/ a possible error     
+    {   // the value w/ the diagnostic     
         int32_t val {0};                                                    // to accomodate high resolution values
         int32_t diagnInfo{0};
+    };
+    
+    struct Value
+    {   // the value w/ a possible error     
+        int64_t raw {0};                                                    // to accomodate high resolution values
+        embot::app::eth::encoder::experimental::Error error {Error::NONE};      // 
     };
     
     struct Target

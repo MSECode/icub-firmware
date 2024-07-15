@@ -1623,6 +1623,8 @@ static eOresult_t s_eo_motioncontrol_updatedPositionsFromEncoders(EOtheMotionCon
 
     eOresult_t res = eores_OK;
     
+    eOmc_joint_status_t *jstatus = NULL;
+    
     // wait for the encoders for some time
     for (uint8_t i=0; i<30; ++i)
     {
@@ -1662,17 +1664,17 @@ static eOresult_t s_eo_motioncontrol_updatedPositionsFromEncoders(EOtheMotionCon
             res = eores_NOK_generic;
         }
         
-        embot::app::eth::encoder::experimental::RawValue valraw1, valraw2, valraw3;
+        embot::app::eth::encoder::experimental::RawValue valraw1 {};
+        embot::app::eth::encoder::experimental::RawValue valraw2 {};
+        embot::app::eth::encoder::experimental::RawValue valraw3 {};
         embot::app::eth::theEncoderReader::getInstance().GetRaw(i, valraw1, valraw2, valraw3);
 
-        if(NULL != (jstatus = eo_entities_GetJointStatus(eo_entities_GetHandle(), jId)))
+        if(NULL != (jstatus = eo_entities_GetJointStatus(eo_entities_GetHandle(), i)))
         {
-            jstatus->addinbfo.multienc[0] = valraw1.val;
-            jstatus->addinbfo.multienc[1] = valraw2.val;
-            jstatus->addinbfo.multienc[2] = valraw3.val;
+            jstatus->addinfo.multienc[0] = valraw1.val;
+            jstatus->addinfo.multienc[1] = valraw2.val;
+            jstatus->addinfo.multienc[2] = valraw3.val;
         }
-        
-        
     } 
     
     embot::app::eth::theEncoderReader::getInstance().Diagnostics_Tick();

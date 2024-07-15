@@ -137,6 +137,11 @@
     {
         return eores_NOK_generic;
     }
+    
+    extern eOresult_t eo_encoderreader_GetRaw(EOtheEncoderReader *p, uint8_t jomo, eOencoderreader_RawValue_t *rv1, eOencoderreader_RawValue_t *rv2, eOencoderreader_RawValue_t *rv3)
+    {
+        return eores_NOK_generic;
+    }
 
 
     
@@ -569,6 +574,28 @@ extern eOresult_t eo_encoderreader_Scale(EOtheEncoderReader* p, uint8_t jomo, eO
     }
     
     return r;    
+}
+
+extern eOresult_t eo_encoderreader_GetRaw(EOtheEncoderReader *p, uint8_t jomo, eOencoderreader_RawValue_t *rv1, eOencoderreader_RawValue_t *rv2, eOencoderreader_RawValue_t *rv3)
+{
+    if(NULL == p)
+    {
+        return(eores_NOK_nullpointer);
+    }
+    
+    if(eobool_false == s_eo_theencoderreader.service.active)
+    {   // nothing to do because we dont have it
+        return(eores_OK);
+    }   
+
+    if(jomo >= eOappEncReader_jomos_maxnumberof)
+    {
+        return(eores_NOK_generic);
+    }
+
+    eOresult_t res = eo_appEncReader_GetRawValue(s_eo_theencoderreader.reader, jomo, rv1, rv2, rv3); 
+    
+    return(res);
 }
 
 // --------------------------------------------------------------------------------------------------------------------
