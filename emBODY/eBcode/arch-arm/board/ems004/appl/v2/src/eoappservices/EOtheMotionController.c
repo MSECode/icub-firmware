@@ -1662,6 +1662,17 @@ static eOresult_t s_eo_motioncontrol_updatedPositionsFromEncoders(EOtheMotionCon
             res = eores_NOK_generic;
         }
         
+        embot::app::eth::encoder::experimental::RawValue valraw1, valraw2, valraw3;
+        embot::app::eth::theEncoderReader::getInstance().GetRaw(i, valraw1, valraw2, valraw3);
+
+        if(NULL != (jstatus = eo_entities_GetJointStatus(eo_entities_GetHandle(), jId)))
+        {
+            jstatus->addinbfo.multienc[0] = valraw1.val;
+            jstatus->addinbfo.multienc[1] = valraw2.val;
+            jstatus->addinbfo.multienc[2] = valraw3.val;
+        }
+        
+        
     } 
     
     embot::app::eth::theEncoderReader::getInstance().Diagnostics_Tick();

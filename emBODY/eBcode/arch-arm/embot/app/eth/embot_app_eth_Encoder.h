@@ -215,10 +215,10 @@ namespace embot::app::eth::encoder::experimental {
     enum class Position : uint8_t { one = 0, two = 1, three = 2, four = 3, every = 14, none = 15};
     constexpr size_t maxPOSITIONs {4};
     
-    struct Value
+    struct RawValue
     {   // the value w/ a possible error     
-        int64_t raw {0};                                                    // to accomodate high resolution values
-        embot::app::eth::encoder::experimental::Error error {Error::NONE};      // 
+        int32_t val {0};                                                    // to accomodate high resolution values
+        int32_t diagnInfo{0};
     };
     
     struct Target
@@ -232,10 +232,17 @@ namespace embot::app::eth::encoder::experimental {
             
         constexpr bool isvalid() {  return (jomo < maxJOMOs) && (embot::core::tointegral(pos) < maxPOSITIONs); }        
     };
+    
+    struct RawValueDiagnostic
+    {
+        uint32_t info;
+    };
 
     struct IFreader
     {
         virtual bool read(const embot::app::eth::encoder::experimental::Target &target, embot::app::eth::encoder::experimental::Value &value) = 0;   
+        //TBD: is it better define a vector of three???
+        virtual bool GetRaw(uint8_t jomo, embot::app::eth::encoder::experimental::RawValue &value1, embot::app::eth::encoder::experimental::RawValue &value2, embot::app::eth::encoder::experimental::RawValue &value3) = 0;   
         
     protected:
         virtual ~IFreader() {};    // cannot delete from interface but only from derived object        
