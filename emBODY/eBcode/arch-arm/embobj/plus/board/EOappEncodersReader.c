@@ -220,7 +220,8 @@ static EOappEncReader s_eo_theappencreader =
         EO_INIT(.encoder_error_close_to_limit_counter ) {0, 0, 0, 0},
         EO_INIT(.encoder_error_hal_counter            ) {0, 0, 0, 0},
         EO_INIT(.encoder_error_total_timer_counter    ) {0, 0, 0, 0}
-    }
+    },
+    EO_INIT(.genericEncoderRawValues) {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 };
 
 
@@ -609,13 +610,15 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
         hal_spiencoder_diagnostic_t diagn = {0};
         diagn.type = hal_spiencoder_diagnostic_type_none;
         
+        hal_spiencoder_position_t spiRawValue = 0; 
+        
         switch(prop.descriptor->type)
         {
             // they are eomc_enc_aea3, eomc_enc_aea, eomc_enc_amo, eomc_enc_spichainof2, eomc_enc_spichainof3, eomc_enc_qenc, eomc_enc_absanalog, eomc_enc_mais
             
             case eomc_enc_aea:
             {
-                hal_spiencoder_position_t spiRawValue = 0; 
+                
                 // hal_spiencoder_errors_flags flags = {0};
 
 #if defined(FAKE_AEA)                
@@ -654,7 +657,6 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
 
             case eomc_enc_aea3:
             {
-                hal_spiencoder_position_t spiRawValue = 0; 
   
                 if(hal_res_OK == hal_spiencoder_get_value2((hal_spiencoder_t)prop.descriptor->port, &spiRawValue, &diagn))
                 {   
@@ -688,15 +690,13 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
                 sev->on();
                 #endif
                 
-                hal_spiencoder_position_t position = 0;
-                
-                if(hal_res_OK == hal_spiencoder_get_value2((hal_spiencoder_t)prop.descriptor->port, &position, &diagn))
+                if(hal_res_OK == hal_spiencoder_get_value2((hal_spiencoder_t)prop.descriptor->port, &spiRawValue, &diagn))
                 {
                     // check validity for aksim2
                     if(eobool_true == s_eo_appEncReader_IsValidValue_AKSIM2(jomo, &diagn, &prop.valueinfo->errortype))
                     {
                         // rescale the position value of the position to icubdegrees
-                        prop.valueinfo->value[0] = s_eo_appEncReader_rescale2icubdegrees(position, jomo, (eOmc_position_t)prop.descriptor->pos);
+                        prop.valueinfo->value[0] = s_eo_appEncReader_rescale2icubdegrees(spiRawValue, jomo, (eOmc_position_t)prop.descriptor->pos);
                     }
                     else
                     {
@@ -765,7 +765,6 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
             
             case eomc_enc_amo:
             {
-                hal_spiencoder_position_t spiRawValue = 0; 
                 // hal_spiencoder_errors_flags flags = {0};
 #if defined(FAKE_AMO)  
                 static int32_t cnt = 0;                 
@@ -814,7 +813,6 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
 
             case eomc_enc_spichainof2:
             {
-                hal_spiencoder_position_t spiRawValue = 0; 
                 // hal_spiencoder_errors_flags flags = {0};
                 
                 // if(hal_res_OK == hal_spiencoder_get_value((hal_spiencoder_t)prop.descriptor->port, &spiRawValue, &flags))
@@ -959,8 +957,11 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
                 errorparam = 0;                
             } break;             
               
-            
         }
+
+        //TODO: fill the array with  spiRawValue  --> first siolution use sawtooth values
+        p->genericEncoderRawValues[jomo][i] = (int32_t)spiRawValue;
+        
         
         // now we see if there is any diagnostics to send up. we eval the errortype
         // we have only one diagnostics for the 4 joints.
@@ -1062,68 +1063,10 @@ extern eOresult_t eo_appEncReader_GetRawValue(EOappEncReader *p, uint8_t jomo, e
     
     for(uint8_t i=0; i<3; i++)
     {   // for each of the three encoders ....
-           
-        eOencoderreader_RawValue_t *rawVal = encRawValuesVec[i]; 
-        uint16_t errorparam = 0;
         
         // so far we assume no errors and we assign 0 to all values
-        rawVal->diagnInfo = 0;
-        rawVal->val = 0;
-        
-        // ok, we have a connected encoder. we see what type it is and we perform the proper acquisition
-        // we also retrieve its diagnostic
-        hal_spiencoder_diagnostic_t diagn = {0};
-        diagn.type = hal_spiencoder_diagnostic_type_none;
-        hal_spiencoder_t spi_port = (hal_spiencoder_t)p->config.jomoconfig[jomo].encoder1des.port; // since we are currently requesting just amo or aksim (never together now) raw val. The port is always the one from encoder 1 or 2??
-
-        hal_spiencoder_position_t spiRawValue = 0; 
-        if(hal_res_OK == hal_spiencoder_get_value2(spi_port, &spiRawValue, &diagn))
-        {       
-            // GOOD VALUE
-            eOmc_joint_t *joint = (eOmc_joint_t*) eoprot_entity_ramof_get(eoprot_board_localboard, eoprot_endpoint_motioncontrol, eoprot_entity_mc_joint, jomo);
-            
-            int16_t sectors = (int16_t)(joint->config.gearbox_E2J + 0.5f);
-            
-            if (sectors == 32)
-            {
-                spiRawValue = (spiRawValue >> 1) & 0x3FFF;
-            }
-            else if (sectors == 64)
-            {
-                spiRawValue = spiRawValue & 0x3FFF;
-            }
-        }
-        else
-        {   // we dont even have a valid reading from hal .....                    
-            // marco.accame: verify if the hal for amo encoder returns error also for parity or else ... so far, i just return a generic amo error
-            rawVal->diagnInfo = encreader_err_AMO_GENERIC;
-            errorparam = 0; // we shall expand it later on...
-        }
-
-        // now we see if there is any diagnostics to send up. we eval the errortype
-        // we have only one diagnostics for the 4 joints.
-        // in par16[0] and par64[0] we put info of the 4 primary encoders.
-        // in par16[1] and par64[1] we put info of the 4 secondary encoders.
-        // so far we use prop.valueinfo->errortype but we may use also diagn for the amo
-
-        eObool_t filldiagnostics = eo_common_byte_bitcheck(p->diagnostics.config.jomomask, jomo);
-        if(eobool_true == filldiagnostics)
-        {
-            
-            // in here we send up a message only on the basis of diagn
-            if(hal_spiencoder_diagnostic_type_none != diagn.type)
-            {
-                // select only a nibble from diagn.type and shift the nibble up so that we can fit 4 nibbles, one for each joint
-                p->diagnostics.par16[i] |= ((0x0f & diagn.type)<<(4*jomo));  
-                // select only 2 bytes: 1 from from diagn.type and one from diagn.info.value
-                uint64_t word = (0x0ff & diagn.type) | ((0xff & diagn.info.value) << 8);
-                // copy the word in correct position so that we have [word-enc3 | word-enc2 | word-enc1 | word-enc0]
-                p->diagnostics.par64[i] |= (word << (16*jomo));
-            }
-            
-        }
-        
-        // ok, we now go to next encoder or ... we terminate the for() loop
+        encRawValuesVec[i]->diagnInfo = 0;
+        encRawValuesVec[i]->val = p->genericEncoderRawValues[jomo][i];
         
     } // for()
      

@@ -1620,7 +1620,7 @@ extern void eoprot_fun_INIT_mc_motor_status(const EOnv* nv)
  */
 static eOresult_t s_eo_motioncontrol_updatedPositionsFromEncoders(EOtheMotionController *p)
 {
-
+    
     eOresult_t res = eores_OK;
     
     eOmc_joint_status_t *jstatus = NULL;
@@ -1674,6 +1674,10 @@ static eOresult_t s_eo_motioncontrol_updatedPositionsFromEncoders(EOtheMotionCon
             jstatus->addinfo.multienc[0] = valraw1.val;
             jstatus->addinfo.multienc[1] = valraw2.val;
             jstatus->addinfo.multienc[2] = valraw3.val;
+            
+//            jstatus->addinfo.multienc[0] = 32;
+//            jstatus->addinfo.multienc[1] = 64;
+//            jstatus->addinfo.multienc[2] = 128;
         }
     } 
     

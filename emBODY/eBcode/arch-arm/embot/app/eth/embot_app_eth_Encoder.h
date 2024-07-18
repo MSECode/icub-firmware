@@ -215,9 +215,14 @@ namespace embot::app::eth::encoder::experimental {
     enum class Position : uint8_t { one = 0, two = 1, three = 2, four = 3, every = 14, none = 15};
     constexpr size_t maxPOSITIONs {4};
     
+    struct RawValueDiagnostic // do we need to use it in RawValue as datatype of diagnInfo
+    {
+        uint32_t info;
+    };
+
     struct RawValue
     {   // the value w/ the diagnostic     
-        int32_t val {0};                                                    // to accomodate high resolution values
+        int32_t val {0};                           // i would set to uint32 since hal_spiencoder_position_t is uint32_t which is the datatype of the spi raw value coming from hal
         int32_t diagnInfo{0};
     };
     
@@ -237,11 +242,6 @@ namespace embot::app::eth::encoder::experimental {
         constexpr Target(uint8_t j, Position p) : jomo(j), pos(p) {}
             
         constexpr bool isvalid() {  return (jomo < maxJOMOs) && (embot::core::tointegral(pos) < maxPOSITIONs); }        
-    };
-    
-    struct RawValueDiagnostic
-    {
-        uint32_t info;
     };
 
     struct IFreader

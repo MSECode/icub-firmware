@@ -139,6 +139,9 @@ struct EOappEncReader_hid
     eOappEncReader_hallAdc_conversionData_t hallAdcConversionData;
     eo_appEncReader_amodiag_t               amodiag;
     eOappEncReader_Aksim2_DiagnosticError_Counters_t aksim2DiagnerrorCounters;
+
+    //array for raw values[eOappEncReader_encoders_maxnumberof] to be filled at eo_appEncReader_GetValue() call and given when eo_appEncReader_GetValueRaw is requested
+    int32_t                                 genericEncoderRawValues[eOappEncReader_jomos_maxnumberof][3];
 }; 
 
 
