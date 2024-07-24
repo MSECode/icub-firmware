@@ -126,6 +126,8 @@ typedef struct
     
 } eOappEncReader_Aksim2_DiagnosticError_Counters_t;
 
+enum { rawValue_numOfEncoders = 3 };
+
 struct EOappEncReader_hid
 {
     eObool_t                                initted;
@@ -141,7 +143,7 @@ struct EOappEncReader_hid
     eOappEncReader_Aksim2_DiagnosticError_Counters_t aksim2DiagnerrorCounters;
 
     //array for raw values[eOappEncReader_encoders_maxnumberof] to be filled at eo_appEncReader_GetValue() call and given when eo_appEncReader_GetValueRaw is requested
-    int32_t                                 genericEncoderRawValues[eOappEncReader_jomos_maxnumberof][3];
+    eOencoderreader_RawValue_t              genericEncoderRawData[eOappEncReader_jomos_maxnumberof][rawValue_numOfEncoders];
 }; 
 
 
