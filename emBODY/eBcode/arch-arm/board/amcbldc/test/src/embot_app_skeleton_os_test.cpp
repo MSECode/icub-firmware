@@ -376,23 +376,33 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 		void testHall(){
 			uint8_t data[8] {0};		
 			uint8_t res {0};
+            embot::hw::motor::HallStatus hallStatus {0};
 
-			for(int i=0; i<150; i++){	
-				if((HAL_GPIO_ReadPin(HALL1_GPIO_Port, HALL1_Pin)     != GPIO_PIN_RESET)) res |= 1;
-				else res |= 2;
-				if((HAL_GPIO_ReadPin(HALL2_GPIO_Port, HALL2_Pin)     != GPIO_PIN_RESET)) res |= 4;
-				else res |= 8;
-				if((HAL_GPIO_ReadPin(HALL3_GPIO_Port, HALL3_Pin)     != GPIO_PIN_RESET)) res |= 16;
-				else res |= 32;
+			for(int i=0; i<300; i++){	
+//				if((HAL_GPIO_ReadPin(HALL1_GPIO_Port, HALL1_Pin)     != GPIO_PIN_RESET)) res |= 1;
+//				else res |= 2;
+//				if((HAL_GPIO_ReadPin(HALL2_GPIO_Port, HALL2_Pin)     != GPIO_PIN_RESET)) res |= 4;
+//				else res |= 8;
+//				if((HAL_GPIO_ReadPin(HALL3_GPIO_Port, HALL3_Pin)     != GPIO_PIN_RESET)) res |= 16;
+//				else res |= 32;
+                
+                if(embot::hw::motor::gethallstatus(embot::hw::MOTOR::one, hallStatus) != embot::hw::resOK)
+                {
+                    data[0] = 0xBB;
+                }
+                else
+                {
+                    data[0] = 0xAA;
+                }
 
-				embot::core::wait(10* embot::core::time1millisec);
-			
-				embot::core::print(std::to_string(res));
-				
-			}
+                embot::core::wait(10* embot::core::time1millisec);
 
-			if(res == 63) data[0] = 0xAA;
-			else data[0] = 0xBB;
+                embot::core::print(std::to_string((uint8_t)hallStatus));
+                
+                }
+
+//			if(res == 63) data[0] = 0xAA;
+//			else data[0] = 0xBB;
 			
 			sendCan(data);
 		}
@@ -400,27 +410,65 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 		void testEncoder(){
 			uint8_t data[8] {0};		
 			uint8_t res {0};
+            embot::hw::motor::Position encoderPosition {0};
 
-			for(int i=0; i<150; i++){	
-				if((HAL_GPIO_ReadPin(ENCA_GPIO_Port, HALL1_Pin)     != GPIO_PIN_RESET)) res |= 1;
-				else res |= 2;
-				if((HAL_GPIO_ReadPin(ENCB_GPIO_Port, HALL2_Pin)     != GPIO_PIN_RESET)) res |= 4;
-				else res |= 8;
-				if((HAL_GPIO_ReadPin(ENCZ_GPIO_Port, HALL3_Pin)     != GPIO_PIN_RESET)) res |= 16;
-				else res |= 32;
-
+			for(int i=0; i<300; i++){	
+//				if((HAL_GPIO_ReadPin(ENCA_GPIO_Port, ENCA_Pin)     != GPIO_PIN_RESET)) res |= 1;
+//				else res |= 2;
+//				if((HAL_GPIO_ReadPin(ENCB_GPIO_Port, ENCB_Pin)     != GPIO_PIN_RESET)) res |= 4;
+//				else res |= 8;
+//				if((HAL_GPIO_ReadPin(ENCZ_GPIO_Port, ENCZ_Pin)     != GPIO_PIN_RESET)) res |= 16;
+//				else res |= 32;
+                
+                if(embot::hw::motor::getencoder(embot::hw::MOTOR::one, encoderPosition) != embot::hw::resOK)
+                {
+                    data[0] = 0xAA;
+                }
+                else
+                {
+                    data[0] = 0xBB;
+                }
+                
 				embot::core::wait(10* embot::core::time1millisec);
 			
-				embot::core::print(std::to_string(res));
+				embot::core::print(std::to_string((uint32_t)encoderPosition));
 				
 			}
 
-			if(res == 47) data[0] = 0xAA;
-			else data[0] = 0xBB;
+//			if(res == 63) data[0] = 0xAA; //47
+//			else data[0] = 0xBB;
 			
 			sendCan(data);
 		}
+        
+        // TODO: write low level function that returns HAL_StatusTypeDef somewhere in embot
+        void testOB(){
+			uint8_t data[8] {0};
+			data[0] = 0xAA;
+
+			if(!(embot::hw::bsp::amcbldc::getOptionBytes()))
+            {
+                data[0] = 0xBB;
+            }
+            
+			sendCan(data);
+		}
+        
+        void testPWM1() {
+            uint8_t data[8] {0};		
+			uint8_t res {0};
+            
+            
+            
+        }
 		
+        void testPWM2() {
+        ;
+        }
+        
+        void testPWM3() {
+        ;
+        }
 //******************** END TESTS ******************************************************************//
 
 		
@@ -472,7 +520,7 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 						//Test FAULT ON
 						case 0x09 : embot::core::wait(300* embot::core::time1millisec); testFault(1); break;
 						
-  					//Test FAULT OFF
+  					    //Test FAULT OFF
 						case 0x0A : embot::core::wait(300* embot::core::time1millisec); testFault(0); break;
 
 						//Test I2C
@@ -484,6 +532,18 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 						//Test ECODER
 						case 0x0D : embot::core::wait(300* embot::core::time1millisec); testEncoder(); break;
 						
+                        //Test Option Bytes
+						case 0x0E : embot::core::wait(300* embot::core::time1millisec); testOB(); break;
+                        
+                        // Test PWM Motor Phase1
+                        case 0x0F : embot::core::wait(300* embot::core::time1millisec); testPWM1(); break;
+                        
+                        // Test PWM Motor Phase2
+                        case 0x10 : embot::core::wait(300* embot::core::time1millisec); testPWM2(); break;
+                        
+                        // Test PWM Motor Phase3
+                        case 0x11 : embot::core::wait(300* embot::core::time1millisec); testPWM3(); break;
+                        
 						default : break;
 					}			
         }   

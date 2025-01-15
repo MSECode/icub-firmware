@@ -223,6 +223,7 @@ static void hallSetPWM(int16_t pwm)
                | (((HALL2_GPIO_Port->IDR & HALL2_Pin) >> MSB(HALL2_Pin)) << 1)
                | (((HALL3_GPIO_Port->IDR & HALL3_Pin) >> MSB(HALL3_Pin)) << 0);
 
+    embot::core::print(std::to_string((uint8_t)hallStatus));
     /* CW torque */
     if (pwm >= 0)
     {
@@ -1050,6 +1051,8 @@ static uint8_t s_pwm_updateHallStatus(void)
     
     /* Read current value of HALL1, HALL2 and HALL3 signals in bits 2..0 */
     hallStatus = DECODE_HALLSTATUS;
+    
+    embot::core::print(std::to_string((uint8_t)hallStatus));
     
     if (hallStatus == 0 || hallStatus == 7)
     {
