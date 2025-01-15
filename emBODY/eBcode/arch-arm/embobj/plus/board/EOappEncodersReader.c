@@ -42,6 +42,7 @@
 #include "hal_spiencoder.h"
 #include "hal_quadencoder.h"
 #include "hal_adc.h"
+#include "embot_core_binary.h"
 
 #include "EOtheEntities.h"
 #include "EOconstarray.h"
@@ -777,6 +778,7 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
             
             case eomc_enc_amo:
             {
+                static uint16_t amodiagnostic_counter[2] = {};
                 // hal_spiencoder_errors_flags flags = {0};
 #if defined(FAKE_AMO)  
                 static int32_t cnt = 0;                 
@@ -815,6 +817,69 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
                 }
                 
 #endif
+                if( ++amodiagnostic_counter[jomo] > 10000)
+                {
+                    // preperare data for diagnostics
+                    eOerrmanDescriptor_t errdes = {0};
+                    errdes.sourcedevice         = eo_errman_sourcedevice_localboard;
+                    errdes.sourceaddress        = 0;
+                    errdes.par16                = jomo;
+                    errdes.par64                = 0;
+                    
+                    if(hal_spiencoder_diagnostic_type_amo_status0 == diagn.type)
+                    {
+                        uint16_t diagnostic_status_0 = diagn.info.value;
+                        
+                        switch(diagnostic_status_0)
+                        {
+                        
+                            case 1:
+                            case 2:
+                            {
+                                // error on master track only
+                                
+                            } break;
+                            case 4:
+                            case 8:
+                            {
+                                // error on nonius track only
+                                
+                            } break;
+                            default:
+                            {
+                                // error on both tracks
+                                
+                            } break;
+                        }
+                    }
+                    else if(hal_spiencoder_diagnostic_type_amo_status1 == diagn.type)
+                    {
+                        uint16_t diagnostic_status_1 = diagn.info.value;
+                        if((embot::core::binary::bit::check(diagnostic_status_1, 1)) ||  (embot::core::binary::bit::check(diagnostic_status_1, 2)))
+                        {
+                            // eccessive frequency error
+                        }
+                        if((embot::core::binary::bit::check(diagnostic_status_1, 3)))
+                        {
+                            // period counter  consistency error --> counted period != calculated Nonius position
+                        }
+                        if((embot::core::binary::bit::check(diagnostic_status_1, 6)))
+                        {
+                            // i2c comunication error --> no eeprom or i2c communication error
+                        }
+                        if((embot::core::binary::bit::check(diagnostic_status_1, 7)))
+                        {
+                            // crc error --> invalid check sum internal RAM
+                        }
+                        
+                        errdes.code        = eoerror_code_get(eoerror_category_HardWare, eoerror_value_HW_encoder_not_connected);
+                        errdes.par64      |= s_eo_theappencreader.aksim2DiagnerrorCounters.encoder_error_hal_counter[jomo];
+                        eo_errman_Error(eo_errman_GetHandle(), eo_errortype_error, NULL, NULL, &errdes);
+                        
+                    }
+                    
+                    amodiagnostic_counter[jomo] = 0;
+                }
                 
                 // and now ... use diagn
                 // for legacy diagnostics
@@ -823,6 +888,8 @@ extern eOresult_t eo_appEncReader_GetValue(EOappEncReader *p, uint8_t jomo, eOen
                 // and calls the following for amodiag                
                 s_eo_appEncReader_amodiag_Update(jomo, aux_rawvalue, &prop, &diagn);
                
+                
+                
             } break;
 
 
