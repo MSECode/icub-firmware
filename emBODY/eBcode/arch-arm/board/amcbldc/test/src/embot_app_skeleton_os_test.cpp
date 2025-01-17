@@ -422,11 +422,11 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                 
                 if(embot::hw::motor::getencoder(embot::hw::MOTOR::one, encoderPosition) != embot::hw::resOK)
                 {
-                    data[0] = 0xAA;
+                    data[0] = 0xBB;
                 }
                 else
                 {
-                    data[0] = 0xBB;
+                    data[0] = 0xAA;
                 }
                 
 				embot::core::wait(10* embot::core::time1millisec);
