@@ -656,6 +656,7 @@ HAL_StatusTypeDef pwmInit(void)
  */
 HAL_StatusTypeDef pwmInit(void)
 {
+    char message[256] = {};
     /* Clear any preceeding fault condition */
     pwmReset(ENABLE);
     pwmSleep(DISABLE);
@@ -673,9 +674,13 @@ HAL_StatusTypeDef pwmInit(void)
     HAL_TIM_RegisterCallback(&htim1, HAL_TIM_BREAK_CB_ID, pwmMotorFault_cb);
     __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_BREAK);
 
+    snprintf(message, sizeof(message), "pwmStatus before hallSetPwm is: %d", pwmStatus);
+    embot::core::print(message);
     /* Reset the PWM value */
     hallSetPWM(pwmStatus);
 
+    snprintf(message, sizeof(message), "pwmStatus after hallSetPwm is: %d", pwmStatus);
+    embot::core::print(message);
     /* Start TIM1 as 3-phase PWM generator */
     if (HAL_OK != HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1) ||
         HAL_OK != HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2) ||
@@ -857,6 +862,10 @@ void pwmSet(uint16_t u, uint16_t v, uint16_t w)
     if (u > (uint16_t)MAX_PWM) u = MAX_PWM;
     if (v > (uint16_t)MAX_PWM) v = MAX_PWM;
     if (w > (uint16_t)MAX_PWM) w = MAX_PWM;
+    
+    char message[256] = {};
+    snprintf(message, sizeof(message), "PWM phase are --> u: %d, v: %d, w: %d", u, v, w);
+    embot::core::print(message);
     /* Update PWM generators */
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, u);
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, v);

@@ -129,6 +129,9 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
     constexpr std::uint8_t maxINPcanframes = 16;
     constexpr std::uint8_t maxOUTcanframes = 32;
     constexpr embot::os::Event evRXcanframe = 0x00000001;
+    
+    constexpr int32_t currentThresholdMin = 210; //mA
+    constexpr int32_t currentThresholdMax = 270; //mA
 
     static void eventhread_init(embot::os::Thread *t, void *p);
     static void eventhread_onevent(embot::os::Thread *t, embot::os::Event evt, void *p);
@@ -136,8 +139,16 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
     static void alerteventhread(void *arg);
 
     static std::vector<embot::prot::can::Frame> outframes;
-
-
+    static embot::hw::motor::Currents pwmCurrents(0, 0, 0);
+    
+    void onCurrents_FOC_innerloop(void *owner, const embot::hw::motor::Currents * const currents)
+    {
+        pwmCurrents.u = currents->u;
+        pwmCurrents.v = currents->v;
+        pwmCurrents.w = currents->w;
+    }
+    
+    
     void activity_function(void* param)
     {
         ActivityParam* pp = reinterpret_cast<ActivityParam*>(param);    
@@ -187,8 +198,8 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
         embot::hw::can::init(embot::hw::CAN::one, canconfig);
 //        embot::hw::can::setfilters(embot::hw::CAN::one, embot::app::theCANboardInfo::getInstance().getCANaddress());  
 
-    embot::hw::motor::init(embot::hw::MOTOR::one, {});
-
+        embot::hw::motor::init(embot::hw::MOTOR::one, {});
+        embot::hw::motor::setCallbackOnCurrents(embot::hw::MOTOR::one, onCurrents_FOC_innerloop, nullptr);
     }
         
     static void alerteventhread(void *arg)
@@ -410,33 +421,33 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 		void testEncoder(){
 			uint8_t data[8] {0};		
 			uint8_t res {0};
-            embot::hw::motor::Position encoderPosition {0};
+            // embot::hw::motor::Position encoderPosition {0};
 
 			for(int i=0; i<300; i++){	
-//				if((HAL_GPIO_ReadPin(ENCA_GPIO_Port, ENCA_Pin)     != GPIO_PIN_RESET)) res |= 1;
-//				else res |= 2;
-//				if((HAL_GPIO_ReadPin(ENCB_GPIO_Port, ENCB_Pin)     != GPIO_PIN_RESET)) res |= 4;
-//				else res |= 8;
-//				if((HAL_GPIO_ReadPin(ENCZ_GPIO_Port, ENCZ_Pin)     != GPIO_PIN_RESET)) res |= 16;
-//				else res |= 32;
+				if((HAL_GPIO_ReadPin(ENCA_GPIO_Port, ENCA_Pin)     != GPIO_PIN_RESET)) res |= 1;
+				else res |= 2;
+				if((HAL_GPIO_ReadPin(ENCB_GPIO_Port, ENCB_Pin)     != GPIO_PIN_RESET)) res |= 4;
+				else res |= 8;
+				if((HAL_GPIO_ReadPin(ENCZ_GPIO_Port, ENCZ_Pin)     != GPIO_PIN_RESET)) res |= 16;
+				else res |= 32;
                 
-                if(embot::hw::motor::getencoder(embot::hw::MOTOR::one, encoderPosition) != embot::hw::resOK)
-                {
-                    data[0] = 0xBB;
-                }
-                else
-                {
-                    data[0] = 0xAA;
-                }
+//                if(embot::hw::motor::getencoder(embot::hw::MOTOR::one, encoderPosition) != embot::hw::resOK)
+//                {
+//                    data[0] = 0xAA;
+//                }
+//                else
+//                {
+//                    data[0] = 0xBB;
+//                }
                 
 				embot::core::wait(10* embot::core::time1millisec);
 			
-				embot::core::print(std::to_string((uint32_t)encoderPosition));
+				//embot::core::print(std::to_string((uint32_t)encoderPosition));
 				
 			}
 
-//			if(res == 63) data[0] = 0xAA; //47
-//			else data[0] = 0xBB;
+			if(res == 63) data[0] = 0xAA; //47
+			else data[0] = 0xBB;
 			
 			sendCan(data);
 		}
@@ -444,11 +455,15 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
         // TODO: write low level function that returns HAL_StatusTypeDef somewhere in embot
         void testOB(){
 			uint8_t data[8] {0};
-			data[0] = 0xAA;
+			data[0] = 0xBB;
 
 			if(!(embot::hw::bsp::amcbldc::getOptionBytes()))
             {
                 data[0] = 0xBB;
+            }
+            else
+            {
+                data[0] = 0xAA;
             }
             
 			sendCan(data);
@@ -457,17 +472,209 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
         void testPWM1() {
             uint8_t data[8] {0};		
 			uint8_t res {0};
+            char message[256] = {};
+            float cin{0.0};
             
             
+            data[0] = 0xBB;
+            embot::hw::motor::PWMperc pwmPerc(50, 0, 0);
+            // enable power supply, it should be already enabled, just check
+            // enable motorX driver
+            if((embot::hw::motor::enable(embot::hw::MOTOR::one, true)) == embot::hw::resOK)
+            {
+                snprintf(message, sizeof(message), "Motor is enabled: %d", embot::hw::motor::enabled(embot::hw::MOTOR::one));
+                embot::core::print(message);
+                
+                
+                // set the PWM pulses and check currents on the ADC
+                // to configure I will use the embot::hw::motor::PWMperc()
+                // or with embot::core::hw::motor::setpwm(h, u, v, w)
+                //embot::hw::motor::init(embot::hw::MOTOR::one, {});
+                
+                // delay
+                embot::core::wait(2000* embot::core::time1millisec);
+                
+                embot::core::print("Before setPWM currents on the phases are:");
+                embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
+                embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
+                embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
+                
+                embot::core::print("Cin if disabled: " + std::to_string(embot::hw::bsp::amcbldc::getCIN()));
+                
+                if((embot::hw::motor::setPWM(embot::hw::MOTOR::one, pwmPerc)) != embot::hw::resOK)
+                {
+                    return;
+                }
+                
+                // delay
+                embot::core::wait(5000* embot::core::time1millisec);
+                //check currents
+                {
+                    embot::core::print("After setPWM currents on the phases are:");
+                    embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
+                    embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
+                    embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
+                    if(pwmCurrents.u >= currentThresholdMin && pwmCurrents.u <= currentThresholdMax)
+                    {
+                        data[0] = 0xAA;
+                    }
+                }
+                
+                
+                cin = embot::hw::bsp::amcbldc::getCIN();
+                embot::core::print("Cin if enabled: " + std::to_string(cin));
+            }
             
+            
+            // delay
+            embot::core::wait(5000* embot::core::time1millisec);
+            
+            // disable motorX driver
+            // disable power supply/ absorption
+            if((embot::hw::motor::enable(embot::hw::MOTOR::one, false)) != embot::hw::resOK)
+            {
+                data[0] = 0xBB;
+            }
+            
+            embot::core::print("Motor is enabled: " + std::to_string(embot::hw::motor::enabled(embot::hw::MOTOR::one)));
+            sendCan(data);
         }
 		
         void testPWM2() {
-        ;
+            uint8_t data[8] {0};		
+			uint8_t res {0};
+            char message[256] = {};
+            float cin {0.00};
+                
+            data[0] = 0xBB;
+            embot::hw::motor::PWMperc pwmPerc(0, 50, 0);
+            // enable power supply, it should be already enabled, just check
+            // enable motorX driver
+            if((embot::hw::motor::enable(embot::hw::MOTOR::one, true)) == embot::hw::resOK)
+            {
+                snprintf(message, sizeof(message), "Motor is enabled: %d", embot::hw::motor::enabled(embot::hw::MOTOR::one));
+                embot::core::print(message);
+                
+                
+                // set the PWM pulses and check currents on the ADC
+                // to configure I will use the embot::hw::motor::PWMperc()
+                // or with embot::core::hw::motor::setpwm(h, u, v, w)
+                //embot::hw::motor::init(embot::hw::MOTOR::one, {});
+                
+                // delay
+                embot::core::wait(2000* embot::core::time1millisec);
+                
+                embot::core::print("Before setPWM currents on the phases are:");
+                embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
+                embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
+                embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
+                
+                embot::core::print("Cin if disabled: " + std::to_string(embot::hw::bsp::amcbldc::getCIN()));
+            
+                if((embot::hw::motor::setPWM(embot::hw::MOTOR::one, pwmPerc)) != embot::hw::resOK)
+                {
+                    return;
+                }
+                
+                // delay
+                embot::core::wait(5000* embot::core::time1millisec);
+                embot::core::print("After setPWM currents on the phases are:");
+                embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
+                embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
+                embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
+                
+                //check currents
+                if(pwmCurrents.v >= currentThresholdMin && pwmCurrents.v <= currentThresholdMax)
+                {
+                    data[0] = 0xAA;
+                }
+                
+                
+                cin = embot::hw::bsp::amcbldc::getCIN();
+                
+                embot::core::print("Cin if enabled: " + std::to_string(cin));
+            }
+            
+            
+            // delay
+            embot::core::wait(5000* embot::core::time1millisec);
+            
+            // disable motorX driver
+            // disable power supply/ absorption
+            if((embot::hw::motor::enable(embot::hw::MOTOR::one, false)) != embot::hw::resOK)
+            {
+                data[0] = 0xBB;
+            }
+            
+            embot::core::print("Motor is enabled: " + std::to_string(embot::hw::motor::enabled(embot::hw::MOTOR::one)));
+            
+            sendCan(data);
         }
         
         void testPWM3() {
-        ;
+            uint8_t data[8] {0};		
+			uint8_t res {0};
+            char message[256] = {};
+                
+            data[0] = 0xBB;
+            embot::hw::motor::PWMperc pwmPerc(0, 0, 50);
+            // enable power supply, it should be already enabled, just check
+            // enable motorX driver
+            if((embot::hw::motor::enable(embot::hw::MOTOR::one, true)) == embot::hw::resOK)
+            {
+                snprintf(message, sizeof(message), "Motor is enabled: %d", embot::hw::motor::enabled(embot::hw::MOTOR::one));
+                embot::core::print(message);
+                
+                
+                // set the PWM pulses and check currents on the ADC
+                // to configure I will use the embot::hw::motor::PWMperc()
+                // or with embot::core::hw::motor::setpwm(h, u, v, w)
+                //embot::hw::motor::init(embot::hw::MOTOR::one, {});
+                
+                // delay
+                embot::core::wait(2000* embot::core::time1millisec);
+                
+                embot::core::print("Before setPWM currents on the phases are:");
+                embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
+                embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
+                embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
+                
+                embot::core::print("Cin if disabled: " + std::to_string(embot::hw::bsp::amcbldc::getCIN()));
+                
+                if((embot::hw::motor::setPWM(embot::hw::MOTOR::one, pwmPerc)) != embot::hw::resOK)
+                {
+                    return;
+                }
+                
+                // delay
+                embot::core::wait(5000* embot::core::time1millisec);
+                embot::core::print("After setPWM currents on the phases are:");
+                embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
+                embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
+                embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
+                
+                //check currents
+                if(pwmCurrents.w >= currentThresholdMin && pwmCurrents.w <= currentThresholdMax)
+                {
+                    data[0] = 0xAA;
+                }
+                
+                embot::core::print("Cin if enabled: " + std::to_string(embot::hw::bsp::amcbldc::getCIN()));
+            }
+            
+            
+            // delay
+            embot::core::wait(5000* embot::core::time1millisec);
+            
+            // disable motorX driver
+            // disable power supply/ absorption
+            if((embot::hw::motor::enable(embot::hw::MOTOR::one, false)) != embot::hw::resOK)
+            {
+                data[0] = 0xBB;
+            }
+            
+            embot::core::print("Motor is enabled: " + std::to_string(embot::hw::motor::enabled(embot::hw::MOTOR::one)));
+            sendCan(data);
         }
 //******************** END TESTS ******************************************************************//
 

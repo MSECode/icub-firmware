@@ -325,11 +325,16 @@ namespace embot { namespace hw { namespace motor {
 
     result_t setPWM(MOTOR h, const PWMperc &p)
     {
+        char message[256] = {};
+        snprintf(message, sizeof(message), "Motor is enabled: %d", enabled(h));
+        embot::core::print(message);
         if(false == enabled(h))
         {
             return resNOK;
         }
         
+        snprintf(message, sizeof(message), "PWM percetages passed are --> a:%.4f, b: %.4f, c:%.4f", p.a, p.b, p.c);
+        embot::core::print(message);
         return s_hw_setpwmUVWperc(h, p);
     } 
 
