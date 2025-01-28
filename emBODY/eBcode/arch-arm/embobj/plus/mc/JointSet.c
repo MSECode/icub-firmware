@@ -383,7 +383,7 @@ BOOL JointSet_do_check_faults(JointSet* o)
             encoder_fault = TRUE;
         }
     }
-    //if an encoder of this set is in fault ten set hw fault on each joint of this set.
+    //if an encoder of this set is in fault then set hw fault on each joint of this set.
     if(encoder_fault)
     {
         for (int k=0; k<N; ++k)

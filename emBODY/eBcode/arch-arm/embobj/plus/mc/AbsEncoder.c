@@ -559,6 +559,7 @@ void AbsEncoder_update(AbsEncoder* o, uint16_t position)
             descriptor.sourceaddress = 0;
             descriptor.code = eoerror_code_get(eoerror_category_MotionControl, eoerror_value_MC_abs_enc_spikes);
             eo_errman_Error(eo_errman_GetHandle(), eo_errortype_warning, NULL, NULL, &descriptor);
+            embot::core::print("Calling eoerror_value_MC_abs_enc_spikes for spikes in AbsEncoder_update");
                 
             if (o->spike_cnt > o->spike_cnt_limit)
             {
@@ -748,6 +749,7 @@ BOOL AbsEncoder_is_in_fault(AbsEncoder* o)
         
         if (o->fault_state.bits.spikes)
         {
+            embot::core::print("Calling AbsEncoder_send_error for spikes in AbsEncoder_is_in_fault");
             AbsEncoder_send_error(o->ID, eoerror_value_MC_abs_enc_spikes, 0);
         }
         
