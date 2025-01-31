@@ -14,7 +14,7 @@
 
 
 constexpr extern uint8_t  Firmware_vers = 1;
-constexpr extern uint8_t  Revision_vers = 0;
+constexpr extern uint8_t  Revision_vers = 1;
 constexpr extern uint8_t  Build_number  = 0;
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -389,13 +389,8 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 			uint8_t res {0};
             embot::hw::motor::HallStatus hallStatus {0};
 
-			for(int i=0; i<300; i++){	
-//				if((HAL_GPIO_ReadPin(HALL1_GPIO_Port, HALL1_Pin)     != GPIO_PIN_RESET)) res |= 1;
-//				else res |= 2;
-//				if((HAL_GPIO_ReadPin(HALL2_GPIO_Port, HALL2_Pin)     != GPIO_PIN_RESET)) res |= 4;
-//				else res |= 8;
-//				if((HAL_GPIO_ReadPin(HALL3_GPIO_Port, HALL3_Pin)     != GPIO_PIN_RESET)) res |= 16;
-//				else res |= 32;
+			for(int i=0; i<300; i++)
+            {
                 
                 if(embot::hw::motor::gethallstatus(embot::hw::MOTOR::one, hallStatus) != embot::hw::resOK)
                 {
@@ -410,10 +405,7 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 
                 embot::core::print(std::to_string((uint8_t)hallStatus));
                 
-                }
-
-//			if(res == 63) data[0] = 0xAA;
-//			else data[0] = 0xBB;
+            }
 			
 			sendCan(data);
 		}
@@ -421,7 +413,6 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 		void testEncoder(){
 			uint8_t data[8] {0};		
 			uint8_t res {0};
-            // embot::hw::motor::Position encoderPosition {0};
 
 			for(int i=0; i<300; i++){	
 				if((HAL_GPIO_ReadPin(ENCA_GPIO_Port, ENCA_Pin)     != GPIO_PIN_RESET)) res |= 1;
@@ -431,19 +422,7 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 				if((HAL_GPIO_ReadPin(ENCZ_GPIO_Port, ENCZ_Pin)     != GPIO_PIN_RESET)) res |= 16;
 				else res |= 32;
                 
-//                if(embot::hw::motor::getencoder(embot::hw::MOTOR::one, encoderPosition) != embot::hw::resOK)
-//                {
-//                    data[0] = 0xAA;
-//                }
-//                else
-//                {
-//                    data[0] = 0xBB;
-//                }
-                
 				embot::core::wait(10* embot::core::time1millisec);
-			
-				//embot::core::print(std::to_string((uint32_t)encoderPosition));
-				
 			}
 
 			if(res == 63) data[0] = 0xAA; //47
@@ -453,7 +432,8 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 		}
         
         // TODO: write low level function that returns HAL_StatusTypeDef somewhere in embot
-        void testOB(){
+        void testOB()
+        {
 			uint8_t data[8] {0};
 			data[0] = 0xBB;
 
@@ -469,7 +449,8 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 			sendCan(data);
 		}
         
-        void testPWM1() {
+        void testPWM1() 
+        {
             uint8_t data[8] {0};		
 			uint8_t res {0};
             char message[256] = {};
@@ -484,15 +465,14 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
             {
                 snprintf(message, sizeof(message), "Motor is enabled: %d", embot::hw::motor::enabled(embot::hw::MOTOR::one));
                 embot::core::print(message);
-                
-                
+             
                 // set the PWM pulses and check currents on the ADC
                 // to configure I will use the embot::hw::motor::PWMperc()
                 // or with embot::core::hw::motor::setpwm(h, u, v, w)
                 //embot::hw::motor::init(embot::hw::MOTOR::one, {});
                 
                 // delay
-                embot::core::wait(2000* embot::core::time1millisec);
+                embot::core::wait(500* embot::core::time1millisec);
                 
                 embot::core::print("Before setPWM currents on the phases are:");
                 embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
@@ -508,26 +488,24 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                 
                 // delay
                 embot::core::wait(5000* embot::core::time1millisec);
+                
                 //check currents
+                embot::core::print("After setPWM currents on the phases are:");
+                embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
+                embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
+                embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
+                if(pwmCurrents.u >= currentThresholdMin && pwmCurrents.u <= currentThresholdMax)
                 {
-                    embot::core::print("After setPWM currents on the phases are:");
-                    embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
-                    embot::core::print("c2 = " + std::to_string(pwmCurrents.v) + " [mA]");
-                    embot::core::print("c3 = " + std::to_string(pwmCurrents.w) + " [mA]");
-                    if(pwmCurrents.u >= currentThresholdMin && pwmCurrents.u <= currentThresholdMax)
-                    {
-                        data[0] = 0xAA;
-                    }
+                    data[0] = 0xAA;
                 }
-                
-                
+
                 cin = embot::hw::bsp::amcbldc::getCIN();
                 embot::core::print("Cin if enabled: " + std::to_string(cin));
             }
             
             
             // delay
-            embot::core::wait(5000* embot::core::time1millisec);
+            embot::core::wait(2000* embot::core::time1millisec);
             
             // disable motorX driver
             // disable power supply/ absorption
@@ -540,7 +518,8 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
             sendCan(data);
         }
 		
-        void testPWM2() {
+        void testPWM2() 
+        {
             uint8_t data[8] {0};		
 			uint8_t res {0};
             char message[256] = {};
@@ -562,7 +541,7 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                 //embot::hw::motor::init(embot::hw::MOTOR::one, {});
                 
                 // delay
-                embot::core::wait(2000* embot::core::time1millisec);
+                embot::core::wait(500* embot::core::time1millisec);
                 
                 embot::core::print("Before setPWM currents on the phases are:");
                 embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
@@ -589,15 +568,12 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                     data[0] = 0xAA;
                 }
                 
-                
                 cin = embot::hw::bsp::amcbldc::getCIN();
-                
                 embot::core::print("Cin if enabled: " + std::to_string(cin));
             }
             
-            
             // delay
-            embot::core::wait(5000* embot::core::time1millisec);
+            embot::core::wait(2000* embot::core::time1millisec);
             
             // disable motorX driver
             // disable power supply/ absorption
@@ -611,7 +587,8 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
             sendCan(data);
         }
         
-        void testPWM3() {
+        void testPWM3() 
+        {
             uint8_t data[8] {0};		
 			uint8_t res {0};
             char message[256] = {};
@@ -632,7 +609,7 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                 //embot::hw::motor::init(embot::hw::MOTOR::one, {});
                 
                 // delay
-                embot::core::wait(2000* embot::core::time1millisec);
+                embot::core::wait(500* embot::core::time1millisec);
                 
                 embot::core::print("Before setPWM currents on the phases are:");
                 embot::core::print("c1 = " + std::to_string(pwmCurrents.u) + " [mA]");
@@ -662,9 +639,8 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                 embot::core::print("Cin if enabled: " + std::to_string(embot::hw::bsp::amcbldc::getCIN()));
             }
             
-            
             // delay
-            embot::core::wait(5000* embot::core::time1millisec);
+            embot::core::wait(2000* embot::core::time1millisec);
             
             // disable motorX driver
             // disable power supply/ absorption
