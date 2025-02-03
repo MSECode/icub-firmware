@@ -235,7 +235,7 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 		static void testCan(){
 			uint8_t data[8] {0};
 			data[0] = 0xAA;
-			
+			embot::core::print("TEST CAN COMM");
 			sendCan(data);
 		}
 
@@ -302,20 +302,27 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 			if(vin > 11.5 && vin < 12.5) data[0] = 0xAA;
 			else data[0] = 0xBB;
 			
-  		sendCan(data);
+            sendCan(data);
 		}
 		
 		void testCin(){
-			uint8_t data[8] {0};
-	    float cin {0.00};
+			
+            uint8_t data[8] {0};
+            float cin {0.00};
 			cin = embot::hw::bsp::amcbldc::getCIN();
 
 			embot::core::print("Cin : " + std::to_string(cin));
 			
-			if(cin > 0.030 && cin < 0.060) data[0] = 0xAA;
+			if(cin > 0.020 && cin < 0.060) data[0] = 0xAA;          
 			else data[0] = 0xBB;
-			
-  		sendCan(data);
+            
+            int32_t cin2Int = (static_cast<int32_t>(cin * 1000));
+            data[4] = ((cin2Int) & 0xff000000) >> 24;
+            data[3] = ((cin2Int) & 0x00ff0000) >> 16;
+            data[2] = ((cin2Int) & 0x0000ff00) >> 8;
+            data[1] = ((cin2Int) & 0x000000ff);
+                
+            sendCan(data);
 		}
 		
 
@@ -328,7 +335,7 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 			if(s == embot::hw::gpio::State::SET){embot::core::print("OK"); data[0] = 0xAA;}
 			else{embot::core::print("NOK"); data[0] = 0xBB;}
 			
-  		sendCan(data);
+            sendCan(data);
 		}
 		
 		constexpr embot::hw::GPIO VCCOK {embot::hw::GPIO::PORT::C, embot::hw::GPIO::PIN::thirteen};
@@ -337,10 +344,10 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
 			uint8_t data[8] {0};
 			auto s = embot::hw::gpio::get(VCCOK);
 			
-		  if(s == embot::hw::gpio::State::SET){embot::core::print("OK"); data[0] = 0xAA;}
+            if(s == embot::hw::gpio::State::SET){embot::core::print("OK"); data[0] = 0xAA;}
 			else{embot::core::print("NOK"); data[0] = 0xBB;}
 			
-  		sendCan(data);
+            sendCan(data);
 		}
 		
 		constexpr embot::hw::GPIO EXTFAULT {embot::hw::GPIO::PORT::B, embot::hw::GPIO::PIN::fifteen};
@@ -498,7 +505,14 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                 {
                     data[0] = 0xAA;
                 }
-
+                
+                data[3] = (static_cast<int16_t>(pwmCurrents.u & 0xffff)) & 0x00ff;
+                data[2] = ((static_cast<int16_t>(pwmCurrents.u & 0xffff)) & 0xff00) >> 8;
+                data[5] = (static_cast<int16_t>(pwmCurrents.v & 0xffff)) & 0x00ff;
+                data[4] = ((static_cast<int16_t>(pwmCurrents.v & 0xffff)) & 0xff00) >> 8;
+                data[7] = (static_cast<int16_t>(pwmCurrents.w & 0xffff)) & 0x00ff;
+                data[6] = ((static_cast<int16_t>(pwmCurrents.w & 0xffff)) & 0xff00) >> 8;
+                
                 cin = embot::hw::bsp::amcbldc::getCIN();
                 embot::core::print("Cin if enabled: " + std::to_string(cin));
             }
@@ -568,6 +582,13 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                     data[0] = 0xAA;
                 }
                 
+                data[3] = (static_cast<int16_t>(pwmCurrents.u & 0xffff)) & 0x00ff;
+                data[2] = ((static_cast<int16_t>(pwmCurrents.u & 0xffff)) & 0xff00) >> 8;
+                data[5] = (static_cast<int16_t>(pwmCurrents.v & 0xffff)) & 0x00ff;
+                data[4] = ((static_cast<int16_t>(pwmCurrents.v & 0xffff)) & 0xff00) >> 8;
+                data[7] = (static_cast<int16_t>(pwmCurrents.w & 0xffff)) & 0x00ff;
+                data[6] = ((static_cast<int16_t>(pwmCurrents.w & 0xffff)) & 0xff00) >> 8;
+                
                 cin = embot::hw::bsp::amcbldc::getCIN();
                 embot::core::print("Cin if enabled: " + std::to_string(cin));
             }
@@ -635,6 +656,13 @@ namespace embot { namespace app { namespace skeleton { namespace os { namespace 
                 {
                     data[0] = 0xAA;
                 }
+                
+                data[3] = (static_cast<int16_t>(pwmCurrents.u & 0xffff)) & 0x00ff;
+                data[2] = ((static_cast<int16_t>(pwmCurrents.u & 0xffff)) & 0xff00) >> 8;
+                data[5] = (static_cast<int16_t>(pwmCurrents.v & 0xffff)) & 0x00ff;
+                data[4] = ((static_cast<int16_t>(pwmCurrents.v & 0xffff)) & 0xff00) >> 8;
+                data[7] = (static_cast<int16_t>(pwmCurrents.w & 0xffff)) & 0x00ff;
+                data[6] = ((static_cast<int16_t>(pwmCurrents.w & 0xffff)) & 0xff00) >> 8;
                 
                 embot::core::print("Cin if enabled: " + std::to_string(embot::hw::bsp::amcbldc::getCIN()));
             }
