@@ -39,6 +39,9 @@
 // - OPAQUE STRUCT    
 #include "Joint_hid.h"
     
+// For debugging
+#include "embot_core.h"
+    
 static void Joint_set_inner_control_flags(Joint* o);
 static BOOL Joint_set_pos_ref_in_calib(Joint* o, CTRL_UNITS pos_ref, CTRL_UNITS vel_ref);
 
@@ -310,7 +313,9 @@ BOOL Joint_set_control_mode(Joint* o, eOmc_controlmode_command_t control_mode)
     
     if (o->control_mode == eomc_controlmode_notConfigured) return FALSE;  
         
-    if (o->control_mode == eomc_controlmode_calib) return FALSE;    
+    // japo: FOR NOW 12 Feb 2025 --> I'll comment for test otherwise calibrator can never work. Why do we wanna return if calib?
+    // I can accept to do as for fault, thus set the control mode only if force_idle is requested while calibrating
+    //if (o->control_mode == eomc_controlmode_calib) return FALSE;     
     
     if (o->control_mode == eomc_controlmode_hwFault)
     {

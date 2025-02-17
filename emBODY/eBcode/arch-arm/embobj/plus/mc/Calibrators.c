@@ -632,6 +632,7 @@ BOOL JointSet_do_wait_calibration_10(JointSet* o)
         
                 if (AbsEncoder_is_still(encoder, o->hard_stop_calib.space_thr, o->hard_stop_calib.time_thr))
                 {
+                    embot::core::print("Encoder is seen here as STILL");
                     AbsEncoder_calibrate_in_hard_stop(encoder);
                 }
                 else

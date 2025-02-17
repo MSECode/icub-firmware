@@ -311,7 +311,7 @@ static EOtheMotionController s_eo_themotcon =
     EO_INIT(.id32ofregulars)            NULL,
     
     EO_INIT(.motor_delayer)             { {NULL, NULL, 0}, {NULL, NULL, 0}, {NULL, NULL, 0}, {NULL, NULL, 0} },
-    EO_INIT(.motor_delayer_flags)       0    
+    EO_INIT(.motor_delayer_flags)       0
 };
 
 
@@ -1507,7 +1507,14 @@ extern eOresult_t eo_motioncontrol_Stop(EOtheMotionController *p)
     else //foc, mc4plus, mc4plusmais, and others which use the MControler
     {
         MController_go_idle();
-        MController_deinit();
+        eo_errman_Trace(eo_errman_GetHandle(), "CALLED: MController_go_idle()", s_eobj_ownname);
+        // TODO: japo 15/02/2025 --> I need to understand what to remove if I wanna skip the recalibration --> do things with if inside deinit() chekcing if up parameter for skipping calib
+        if(!(MController_get_maintenanceMode()))
+        {
+            eo_errman_Trace(eo_errman_GetHandle(), "CALLED: MController_deinit()", s_eobj_ownname);
+            MController_deinit();
+        }
+        
     }
       
     p->service.started = eobool_false;

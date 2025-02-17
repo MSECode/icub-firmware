@@ -541,6 +541,7 @@ static int control_output_type(JointSet* o, int16_t control_mode, int16_t intera
 
 BOOL JointSet_set_control_mode(JointSet* o, eOmc_controlmode_command_t control_mode_cmd)
 {
+    embot::core::print("Asked to set control mode");
 #ifdef WRIST_MK2
     if(eomc_jsetconstraint_ergocubwrist == o->special_constraint)
     {
@@ -607,12 +608,16 @@ BOOL JointSet_set_control_mode(JointSet* o, eOmc_controlmode_command_t control_m
     case eomc_controlmode_cmd_force_idle:
     case eomc_controlmode_cmd_idle:
     {
+        embot::core::print("Asked for controlmode idle or force_idle");
         for (int k=0; k<N; ++k)
         { 
             Motor_motion_reset(o->motor+o->motors_of_set[k]);
             Joint_motion_reset(o->joint+o->joints_of_set[k]);
             
+            embot::core::print("motor and joint motions reset");
+            
             Motor_set_idle(o->motor+o->motors_of_set[k]);
+            embot::core::print("motors set IDLE");
             Joint_set_control_mode(o->joint+o->joints_of_set[k], control_mode_cmd);
         }
     }break;
@@ -1674,7 +1679,12 @@ static void JointSet_do_wait_calibration(JointSet* o)
             break;
     }
     
-    if (!o->is_calibrated) return;
+    if (!o->is_calibrated) 
+    {
+        // 12 Feb 2025 --> japo: when we go in timeout failing calibration and setting IDLE this should remain false
+        //embot::core::print("I should have calibration failed after timeout");
+        return;
+    }
     
     for (int es=0; es<E; ++es)
     {
@@ -1696,11 +1706,17 @@ static void JointSet_do_wait_calibration(JointSet* o)
         o->joint[o->joints_of_set[js]].control_mode = eomc_controlmode_idle;
     }
     
-    JointSet_set_control_mode(o, eomc_controlmode_cmd_position);
+    // 12 Feb 2025 japo: how can I arrive here? --> I get the encoder calibrated???
+    if(JointSet_set_control_mode(o, eomc_controlmode_cmd_position))
+    {
+        embot::core::print("When calibration timeout expires I (unfortunately) arrive here and set the control mode to position");
+    }
+   
 }
 
 void JointSet_calibrate(JointSet* o, uint8_t e, eOmc_calibrator_t *calibrator)
 {
+    embot::core::print("Called JointSet_calibrate");
 //    for (int js=0; js<*(o->pN); ++js)
 //    {
 //        o->joint[o->joints_of_set[js]].control_mode = eomc_controlmode_calib;
