@@ -1582,6 +1582,10 @@ static const eOmc_motor_t s_motor_default_value =
     0
 }; 
 
+static const eOmc_motor_t s_controller_default_value =
+{   // to simplify we set everything to zero and then we edit eoprot_fun_INIT_mc_controller*() functions
+    0
+}; 
 
 extern void eoprot_fun_INIT_mc_joint_config(const EOnv* nv)
 {
@@ -1613,6 +1617,11 @@ extern void eoprot_fun_INIT_mc_motor_status(const EOnv* nv)
     sta->mc_fault_state = eoerror_code_dummy;
 }
 
+extern void eoprot_fun_INIT_mc_controller_config(const EOnv* nv)
+{
+    eOmc_controller_config_t *cfg = (eOmc_controller_config_t*)eo_nv_RAM(nv);
+    memmove(cfg, &s_controller_default_value.config, sizeof(eOmc_controller_config_t));
+}
 
 // --------------------------------------------------------------------------------------------------------------------
 // - definition of static functions 

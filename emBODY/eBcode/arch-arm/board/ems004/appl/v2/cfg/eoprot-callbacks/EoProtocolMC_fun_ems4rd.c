@@ -1579,6 +1579,30 @@ extern void eoprot_fun_UPDT_mc_motor_config_temperaturelimit(const EOnv* nv, con
     }
 }
 
+// -- entity controller
+
+
+// f-marker-begin
+extern void eoprot_fun_UPDT_mc_controller_config(const EOnv* nv, const eOropdescriptor_t* rd)
+{
+    eOmc_controller_config_t *cconfig = (eOmc_controller_config_t*)rd->data;
+    eOprotIndex_t cxx = eoprot_ID2index(rd->id32);
+    
+    MController_set_maintenanceMode(cconfig->usemaintenanceMode);
+    
+    char message[384];
+    snprintf(message, sizeof(message), "Received maintenancemode: %d and ctrlrate:%u", cconfig->usemaintenanceMode, cconfig->durationofctrlloop);
+    
+    eOerrmanDescriptor_t errdes = {0};
+
+    errdes.code             = eoerror_code_get(eoerror_category_Debug, eoerror_value_DEB_tag07);
+    errdes.sourcedevice     = 0;
+    errdes.sourceaddress    = 0;
+    errdes.par16            = 0;
+    errdes.par64            = 0;
+    eo_errman_Error(eo_errman_GetHandle(), eo_errortype_debug, message, NULL, &errdes);
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 // - definition of extern hidden functions 
 // --------------------------------------------------------------------------------------------------------------------

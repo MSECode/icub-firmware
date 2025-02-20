@@ -70,6 +70,7 @@ extern int32_t MController_get_absEncoder(uint8_t j); //
 
 // TODO.JAPO --> remove or update --> debug for now
 extern BOOL MController_get_maintenanceMode();
+extern void MController_set_maintenanceMode(eObool_t useMaintenanceMode);
 
 extern void MController_do(void); //
 

@@ -192,7 +192,7 @@ MController* MController_new(uint8_t nJoints, uint8_t nEncods) //
         o->eos[i] = NEW(uint8_t, MAX_ENCODS_PER_BOARD);
     }
     
-    o->isMaintenanceMode = TRUE;
+    o->isMaintenanceMode = FALSE;
     
     MController_init();
 
@@ -259,8 +259,6 @@ void MController_init() //
     }
     
     o->mcmode = eomn_serv_NONE;
-    
-    //o->isMaintenanceMode = TRUE;
 }
 
 void MController_deinit()
@@ -1267,6 +1265,14 @@ BOOL MController_get_maintenanceMode()
     snprintf(message, sizeof(message), "Maintenance mode is %d", smc->isMaintenanceMode);
     embot::core::print(message);
     return smc->isMaintenanceMode;
+}
+
+void MController_set_maintenanceMode(eObool_t useMaintenanceMode)
+{
+    smc->isMaintenanceMode = (BOOL)(useMaintenanceMode);
+    char message[256];
+    snprintf(message, sizeof(message), "Maintenance mode is %d", smc->isMaintenanceMode);
+    embot::core::print(message);
 }
 
 void MController_do()
