@@ -1588,10 +1588,10 @@ extern void eoprot_fun_UPDT_mc_controller_config(const EOnv* nv, const eOropdesc
     eOmc_controller_config_t *cconfig = (eOmc_controller_config_t*)rd->data;
     eOprotIndex_t cxx = eoprot_ID2index(rd->id32);
     
-    MController_set_maintenanceMode(cconfig->usemaintenanceMode);
+    MController_set_maintenanceMode(cconfig->enableskiprecalibration);
     
     char message[384];
-    snprintf(message, sizeof(message), "Received maintenancemode: %d and ctrlrate:%u", cconfig->usemaintenanceMode, cconfig->durationofctrlloop);
+    snprintf(message, sizeof(message), "Received maintenancemode: %d and ctrlrate:%u", cconfig->enableskiprecalibration, cconfig->durationofctrlloop);
     
     eOerrmanDescriptor_t errdes = {0};
 

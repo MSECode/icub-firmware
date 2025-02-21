@@ -1262,7 +1262,7 @@ int32_t MController_get_absEncoder(uint8_t j)
 BOOL MController_get_maintenanceMode()
 {
     char message[256];
-    snprintf(message, sizeof(message), "Maintenance mode is %d", smc->isMaintenanceMode);
+    snprintf(message, sizeof(message), "MController_get_maintenanceMode mode is %d", smc->isMaintenanceMode);
     embot::core::print(message);
     return smc->isMaintenanceMode;
 }
@@ -1271,7 +1271,7 @@ void MController_set_maintenanceMode(eObool_t useMaintenanceMode)
 {
     smc->isMaintenanceMode = (BOOL)(useMaintenanceMode);
     char message[256];
-    snprintf(message, sizeof(message), "Maintenance mode is %d", smc->isMaintenanceMode);
+    snprintf(message, sizeof(message), "MController_set_maintenanceMode mode is %d", smc->isMaintenanceMode);
     embot::core::print(message);
 }
 
