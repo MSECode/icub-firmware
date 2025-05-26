@@ -94,7 +94,8 @@ struct embot::app::eth::theEncoderReader::Impl
     eOservice_diagnostics_t diagnostics {dummy_service_diagnostics};
     
     std::array<std::array<embot::app::eth::encoder::experimental::RawValueEncoder, 2>, max_number_of_jomos> rawvalues {};
-    
+    //embot::app::eth::encoder::experimental::RawValuesOfJomo genericEncoderRawData[max_number_of_jomos] = {};
+        
     struct eOencoderProperties_t
     {
         eOmc_encoder_descriptor_t *descriptor;
@@ -536,6 +537,15 @@ void embot::app::eth::theEncoderReader::Impl::log()
 
 bool embot::app::eth::theEncoderReader::Impl::GetRaw(uint8_t jomo, embot::app::eth::encoder::experimental::RawValuesOfJomo &rawValuesArray)
 {
+    char message[512] = {};
+    std::copy(std::begin(rawvalues[jomo]), std::end(rawvalues[jomo]), std::begin(rawValuesArray.rawvalues));
+    
+//    for(int32_t i = 0; i < 3; i++)
+//    {
+//        snprintf(message, sizeof(message), "Raw values received: %d, raw values copied: %d", rawvalues[i][jomo].val, rawValuesArray.rawvalues[i].val);
+//        embot::core::print(message);
+//    }
+    
     return eores_OK;
 }
 

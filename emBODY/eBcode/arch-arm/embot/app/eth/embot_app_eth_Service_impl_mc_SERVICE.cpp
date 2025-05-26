@@ -325,7 +325,6 @@ namespace embot::app::eth::service::impl::mc {
     {
         bool r {true};
         
-        // i just idle the controller, not the encoder reader    
         r = mcagents.stop();
       
         return r;          
@@ -700,6 +699,8 @@ namespace embot::app::eth::service::impl::mc {
         
         size_t numofjomos = mcagents.numberofjomos();
         
+        
+        
         // wait for the encoders for some time
         for (uint8_t i=0; i<30; ++i)
         {
@@ -738,6 +739,20 @@ namespace embot::app::eth::service::impl::mc {
                 res = false;
             }
             
+            
+            // Add raw values to multienc struct of joint status additional infos 
+            // (currently this struct, if not actually made for this, is exploited to send to embObjMC raw values)
+            // TODO(MSECode): speak w/ accame to check the following lines 
+            eOmc_joint_status_t *jstatus = &joint(i)->status;
+            MController_get_joint_state(i, jstatus);
+            
+            embot::app::eth::encoder::experimental::RawValuesOfJomo rawValsArray = {};
+            
+            embot::app::eth::theEncoderReader::getInstance().GetRaw(i, rawValsArray);
+
+            jstatus->addinfo.multienc[0] = rawValsArray.rawvalues[0].val;
+            jstatus->addinfo.multienc[1] = rawValsArray.rawvalues[1].val;
+            jstatus->addinfo.multienc[2] = rawValsArray.rawvalues[0].diagnInfo;  
         } 
         
         embot::app::eth::theEncoderReader::getInstance().Diagnostics_Tick();

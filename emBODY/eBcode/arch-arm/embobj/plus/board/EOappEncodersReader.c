@@ -1130,7 +1130,6 @@ extern eObool_t eo_appEncReader_isReady(EOappEncReader *p)
 
 extern eOresult_t eo_appEncReader_GetRawValue(EOappEncReader *p, uint8_t jomo, eOencoderreader_RawValuesOfJomo_t *rawValuesArray)
 {
-    static int debug_counter = 0;
     if((NULL == p) || (NULL == rawValuesArray))
     {
         return(eores_NOK_nullpointer);
